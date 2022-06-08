@@ -13,119 +13,124 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+// As far as I can tell, the CC algorithm is not configurable, so for testing I just make GoogleCcEstimator an alias for the RLEstimator.
+
 package org.jitsi.nlj.rtp.bandwidthestimation
 
-import org.jitsi.nlj.util.Bandwidth
-import org.jitsi.nlj.util.DataSize
-import org.jitsi.nlj.util.bps
-import org.jitsi.nlj.util.mbps
-import org.jitsi.utils.logging.DiagnosticContext
-import org.jitsi.utils.logging2.Logger
-import org.jitsi.utils.logging2.createChildLogger
-import org.jitsi_modified.impl.neomedia.rtp.remotebitrateestimator.RemoteBitrateEstimatorAbsSendTime
-import org.jitsi_modified.impl.neomedia.rtp.sendsidebandwidthestimation.SendSideBandwidthEstimation
-import java.time.Duration
-import java.time.Instant
-import kotlin.properties.Delegates
+typealias GoogleCcEstimator = RLEstimator
 
-private val defaultInitBw: Bandwidth = 2.5.mbps
+// import org.jitsi.nlj.util.Bandwidth
+// import org.jitsi.nlj.util.DataSize
+// import org.jitsi.nlj.util.bps
+// import org.jitsi.nlj.util.mbps
+// import org.jitsi.utils.logging.DiagnosticContext
+// import org.jitsi.utils.logging2.Logger
+// import org.jitsi.utils.logging2.createChildLogger
+// import org.jitsi_modified.impl.neomedia.rtp.remotebitrateestimator.RemoteBitrateEstimatorAbsSendTime
+// import org.jitsi_modified.impl.neomedia.rtp.sendsidebandwidthestimation.SendSideBandwidthEstimation
+// import java.time.Duration
+// import java.time.Instant
+// import kotlin.properties.Delegates
 
-class GoogleCcEstimator(diagnosticContext: DiagnosticContext, parentLogger: Logger) :
-    BandwidthEstimator(diagnosticContext) {
-    override val algorithmName = "Google CC"
+// private val defaultInitBw: Bandwidth = 2.5.mbps
 
-    /* TODO: Use configuration service to set this default value. */
-    override var initBw: Bandwidth = defaultInitBw
-    /* TODO: observable which sets the components' values if we're in initial state. */
+// class GoogleCcEstimator(diagnosticContext: DiagnosticContext, parentLogger: Logger) :
+//     BandwidthEstimator(diagnosticContext) {
+//     override val algorithmName = "Google CC"
 
-    override var minBw: Bandwidth by Delegates.observable(GoogleCcEstimatorConfig.minBw) {
-            _, _, newValue ->
-        bitrateEstimatorAbsSendTime.setMinBitrate(newValue.bps.toInt())
-        sendSideBandwidthEstimation.setMinMaxBitrate(newValue.bps.toInt(), maxBw.bps.toInt())
-    }
+//     /* TODO: Use configuration service to set this default value. */
+//     override var initBw: Bandwidth = defaultInitBw
+//     /* TODO: observable which sets the components' values if we're in initial state. */
 
-    override var maxBw: Bandwidth by Delegates.observable(GoogleCcEstimatorConfig.maxBw) {
-            _, _, newValue ->
-        sendSideBandwidthEstimation.setMinMaxBitrate(minBw.bps.toInt(), newValue.bps.toInt())
-    }
+//     override var minBw: Bandwidth by Delegates.observable(GoogleCcEstimatorConfig.minBw) {
+//             _, _, newValue ->
+//         bitrateEstimatorAbsSendTime.setMinBitrate(newValue.bps.toInt())
+//         sendSideBandwidthEstimation.setMinMaxBitrate(newValue.bps.toInt(), maxBw.bps.toInt())
+//     }
 
-    private val logger = createChildLogger(parentLogger)
+//     override var maxBw: Bandwidth by Delegates.observable(GoogleCcEstimatorConfig.maxBw) {
+//             _, _, newValue ->
+//         sendSideBandwidthEstimation.setMinMaxBitrate(minBw.bps.toInt(), newValue.bps.toInt())
+//     }
 
-    /**
-     * Implements the delay-based part of Google CC.
-     */
-    private val bitrateEstimatorAbsSendTime = RemoteBitrateEstimatorAbsSendTime(diagnosticContext, logger).also {
-        it.setMinBitrate(minBw.bps.toInt())
-    }
+//     private val logger = createChildLogger(parentLogger)
 
-    /**
-     * Implements the loss-based part of Google CC.
-     */
-    private val sendSideBandwidthEstimation =
-        SendSideBandwidthEstimation(diagnosticContext, initBw.bps.toLong(), logger).also {
-            it.setMinMaxBitrate(minBw.bps.toInt(), maxBw.bps.toInt())
-        }
+//     /**
+//      * Implements the delay-based part of Google CC.
+//      */
+//     private val bitrateEstimatorAbsSendTime = RemoteBitrateEstimatorAbsSendTime(diagnosticContext, logger).also {
+//         it.setMinBitrate(minBw.bps.toInt())
+//     }
 
-    override fun doProcessPacketArrival(
-        now: Instant,
-        sendTime: Instant?,
-        recvTime: Instant?,
-        seq: Int,
-        size: DataSize,
-        ecn: Byte,
-        previouslyReportedLost: Boolean
-    ) {
-        if (sendTime != null && recvTime != null) {
-            bitrateEstimatorAbsSendTime.incomingPacketInfo(
-                now.toEpochMilli(),
-                sendTime.toEpochMilli(), recvTime.toEpochMilli(), size.bytes.toInt()
-            )
-        }
-        sendSideBandwidthEstimation.updateReceiverEstimate(bitrateEstimatorAbsSendTime.latestEstimate)
-        sendSideBandwidthEstimation.reportPacketArrived(now.toEpochMilli(), previouslyReportedLost)
-    }
+//     /**
+//      * Implements the loss-based part of Google CC.
+//      */
+//     private val sendSideBandwidthEstimation =
+//         SendSideBandwidthEstimation(diagnosticContext, initBw.bps.toLong(), logger).also {
+//             it.setMinMaxBitrate(minBw.bps.toInt(), maxBw.bps.toInt())
+//         }
 
-    override fun doProcessPacketLoss(now: Instant, sendTime: Instant?, seq: Int) {
-        sendSideBandwidthEstimation.reportPacketLost(now.toEpochMilli())
-    }
+//     override fun doProcessPacketArrival(
+//         now: Instant,
+//         sendTime: Instant?,
+//         recvTime: Instant?,
+//         seq: Int,
+//         size: DataSize,
+//         ecn: Byte,
+//         previouslyReportedLost: Boolean
+//     ) {
+//         if (sendTime != null && recvTime != null) {
+//             bitrateEstimatorAbsSendTime.incomingPacketInfo(
+//                 now.toEpochMilli(),
+//                 sendTime.toEpochMilli(), recvTime.toEpochMilli(), size.bytes.toInt()
+//             )
+//         }
+//         sendSideBandwidthEstimation.updateReceiverEstimate(bitrateEstimatorAbsSendTime.latestEstimate)
+//         sendSideBandwidthEstimation.reportPacketArrived(now.toEpochMilli(), previouslyReportedLost)
+//     }
 
-    override fun doFeedbackComplete(now: Instant) {
-        /* TODO: rate-limit how often we call updateEstimate? */
-        sendSideBandwidthEstimation.updateEstimate(now.toEpochMilli())
-        reportBandwidthEstimate(now, sendSideBandwidthEstimation.latestEstimate.bps)
-    }
+//     override fun doProcessPacketLoss(now: Instant, sendTime: Instant?, seq: Int) {
+//         sendSideBandwidthEstimation.reportPacketLost(now.toEpochMilli())
+//     }
 
-    override fun doRttUpdate(now: Instant, newRtt: Duration) {
-        bitrateEstimatorAbsSendTime.onRttUpdate(now.toEpochMilli(), newRtt.toMillis())
-        sendSideBandwidthEstimation.onRttUpdate(newRtt)
-    }
+//     override fun doFeedbackComplete(now: Instant) {
+//         /* TODO: rate-limit how often we call updateEstimate? */
+//         sendSideBandwidthEstimation.updateEstimate(now.toEpochMilli())
+//         reportBandwidthEstimate(now, sendSideBandwidthEstimation.latestEstimate.bps)
+//     }
 
-    override fun getCurrentBw(now: Instant): Bandwidth {
-        return sendSideBandwidthEstimation.latestEstimate.bps
-    }
+//     override fun doRttUpdate(now: Instant, newRtt: Duration) {
+//         bitrateEstimatorAbsSendTime.onRttUpdate(now.toEpochMilli(), newRtt.toMillis())
+//         sendSideBandwidthEstimation.onRttUpdate(newRtt)
+//     }
 
-    override fun getStats(now: Instant): StatisticsSnapshot = StatisticsSnapshot(
-        "GoogleCcEstimator", getCurrentBw(now)
-    ).apply {
-        addNumber("incomingEstimateExpirations", bitrateEstimatorAbsSendTime.incomingEstimateExpirations)
-        addNumber("latestDelayEstimate", sendSideBandwidthEstimation.latestREMB)
-        addNumber("latestLossFraction", sendSideBandwidthEstimation.latestFractionLoss / 256.0)
-        with(sendSideBandwidthEstimation.statistics) {
-            update(now.toEpochMilli())
-            addNumber("lossDegradedMs", lossDegradedMs)
-            addNumber("lossFreeMs", lossFreeMs)
-            addNumber("lossLimitedMs", lossLimitedMs)
-        }
-    }
+//     override fun getCurrentBw(now: Instant): Bandwidth {
+//         return sendSideBandwidthEstimation.latestEstimate.bps
+//     }
 
-    override fun reset() {
-        initBw = defaultInitBw
-        minBw = GoogleCcEstimatorConfig.minBw
-        maxBw = GoogleCcEstimatorConfig.maxBw
+//     override fun getStats(now: Instant): StatisticsSnapshot = StatisticsSnapshot(
+//         "GoogleCcEstimator", getCurrentBw(now)
+//     ).apply {
+//         addNumber("incomingEstimateExpirations", bitrateEstimatorAbsSendTime.incomingEstimateExpirations)
+//         addNumber("latestDelayEstimate", sendSideBandwidthEstimation.latestREMB)
+//         addNumber("latestLossFraction", sendSideBandwidthEstimation.latestFractionLoss / 256.0)
+//         with(sendSideBandwidthEstimation.statistics) {
+//             update(now.toEpochMilli())
+//             addNumber("lossDegradedMs", lossDegradedMs)
+//             addNumber("lossFreeMs", lossFreeMs)
+//             addNumber("lossLimitedMs", lossLimitedMs)
+//         }
+//     }
 
-        bitrateEstimatorAbsSendTime.reset()
-        sendSideBandwidthEstimation.reset(initBw.bps.toLong())
+//     override fun reset() {
+//         initBw = defaultInitBw
+//         minBw = GoogleCcEstimatorConfig.minBw
+//         maxBw = GoogleCcEstimatorConfig.maxBw
 
-        sendSideBandwidthEstimation.setMinMaxBitrate(minBw.bps.toInt(), maxBw.bps.toInt())
-    }
-}
+//         bitrateEstimatorAbsSendTime.reset()
+//         sendSideBandwidthEstimation.reset(initBw.bps.toLong())
+
+//         sendSideBandwidthEstimation.setMinMaxBitrate(minBw.bps.toInt(), maxBw.bps.toInt())
+//     }
+// }
