@@ -8,4 +8,4 @@ in {
   mavenix ? import mavenix-src { inherit pkgs; },
   src ? ./.,
   doCheck ? false,
-}: (import ../build.nix).defaultPackage.x86_64-linux
+}: (import ./build.nix).defaultPackage.x86_64-linux

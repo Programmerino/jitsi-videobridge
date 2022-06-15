@@ -16,4 +16,4 @@ target/
 **/.DS_Store
 .m2/
 .git.old
-result/
+result

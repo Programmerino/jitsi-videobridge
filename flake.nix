@@ -33,7 +33,7 @@
           devShell = pkgs.mkShell {
             name = "shell";
             #TEST = builtins.attrNames mvn2nix.packages."${system}".mvn2nix;
-            buildInputs = packages.jitsi-meet.nativeBuildInputs ++ packages.jitsi-videobridge.nativeBuildInputs ++ [ pkgs.starship pkgs.git ];
+            buildInputs = packages.jitsi-videobridge.nativeBuildInputs ++ [ pkgs.starship pkgs.git ];
             shellHook = ''
               eval "$(starship init bash)"
             '';
