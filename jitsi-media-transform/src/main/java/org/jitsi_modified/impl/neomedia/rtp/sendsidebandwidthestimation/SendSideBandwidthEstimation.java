@@ -34,6 +34,9 @@ import java.util.*;
  */
 public class SendSideBandwidthEstimation
 {
+
+    private String id;
+
     /**
      * send_side_bandwidth_estimation.cc
      */
@@ -213,11 +216,12 @@ public class SendSideBandwidthEstimation
      */
     private final Statistics statistics = new Statistics();
 
-    public SendSideBandwidthEstimation(DiagnosticContext diagnosticContext, long startBitrate,
+    public SendSideBandwidthEstimation(String id, DiagnosticContext diagnosticContext, long startBitrate,
         @NotNull Logger parentLogger)
     {
         logger = parentLogger.createChildLogger(getClass().getName());
         this.diagnosticContext = diagnosticContext;
+        this.id = id;
 
         double lossExperimentProbability = SendSideBandwidthEstimationConfig.lossExperimentProbability();
 
@@ -401,6 +405,8 @@ public class SendSideBandwidthEstimation
                 }
             }
         }
+
+        logger.info("LOG " + logger + " " + id + " SetBitrate " + bitrate + " Loss " + (last_fraction_loss_ / 256.0f) + " RTT " + getRttMs());
 
         setBitrate(capBitrateToThresholds(bitrate));
     }

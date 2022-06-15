@@ -64,7 +64,7 @@ class RemoteBandwidthEstimator(
      * We use the full [GoogleCcEstimator] here, but we don't notify it of packet loss, effectively using only the
      * delay-based part.
      */
-    private val bwe: BandwidthEstimator by lazy { GoogleCcEstimator(diagnosticContext, logger) }
+    private val bwe: BandwidthEstimator by lazy { GoogleCcEstimator("RemoteEstimator", diagnosticContext, logger) }
     private val ssrcs: MutableSet<Long> =
         Collections.synchronizedSet(LRUCache.lruSet(MAX_SSRCS, true /* accessOrder */))
     private var numRembsCreated = 0

@@ -30,7 +30,7 @@ import kotlin.properties.Delegates
 
 private val defaultInitBw: Bandwidth = 2.5.mbps
 
-class RLEstimator(diagnosticContext: DiagnosticContext, parentLogger: Logger) :
+class RLEstimator(id: String, diagnosticContext: DiagnosticContext, parentLogger: Logger) :
     BandwidthEstimator(diagnosticContext) {
     override val algorithmName = "RL Estimator"
 
@@ -62,7 +62,7 @@ class RLEstimator(diagnosticContext: DiagnosticContext, parentLogger: Logger) :
      * Implements the loss-based part of Google CC.
      */
     private val sendSideBandwidthEstimation =
-        SendSideBandwidthEstimation(diagnosticContext, initBw.bps.toLong(), logger).also {
+        SendSideBandwidthEstimation(id, diagnosticContext, initBw.bps.toLong(), logger).also {
             it.setMinMaxBitrate(minBw.bps.toInt(), maxBw.bps.toInt())
         }
 
@@ -96,7 +96,6 @@ class RLEstimator(diagnosticContext: DiagnosticContext, parentLogger: Logger) :
     }
 
     override fun doRttUpdate(now: Instant, newRtt: Duration) {
-        logger.info("RTT RL: ${newRtt.toMillis()}")
         bitrateEstimatorAbsSendTime.onRttUpdate(now.toEpochMilli(), newRtt.toMillis())
         sendSideBandwidthEstimation.onRttUpdate(newRtt)
     }

@@ -100,7 +100,7 @@ class RtpSenderImpl(
     // a generic handler here and then the bridge can put it into its PacketQueue and have
     // its handler (likely in another thread) grab the packet and send it out
     private var outgoingPacketHandler: PacketHandler? = null
-    override val bandwidthEstimator: BandwidthEstimator = GoogleCcEstimator(diagnosticContext, logger)
+    override val bandwidthEstimator: BandwidthEstimator = GoogleCcEstimator(id, diagnosticContext, logger)
     private val transportCcEngine = TransportCcEngine(bandwidthEstimator, logger)
 
     private val srtpEncryptWrapper = SrtpEncryptNode()
